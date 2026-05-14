@@ -82,6 +82,10 @@ function Home({ onLogout }) {
     }
   }
 
+  const formatHorario = (horario) => {
+    return typeof horario === 'string' ? horario.slice(0, 5) : ''
+  }
+
   const toggleAccessibilityMode = () => {
     const newMode = !accessibilityMode
     setAccessibilityMode(newMode)
@@ -283,7 +287,7 @@ function Home({ onLogout }) {
   const agendaMedicamentos = Array.isArray(medicamentos) ? medicamentos.map(med => ({
     ...med,
     dosagem: med.descricao || med.dosagem || '',
-    horario: med.agenda?.horario || med.horario || '',
+    horario: formatHorario(med.agenda?.horario || med.horario || ''),
     frequencia: med.tipo || med.frequencia || '',
     status: med.statusMedicamento || 'próximo'
   })) : []
@@ -522,7 +526,7 @@ function Home({ onLogout }) {
               body: JSON.stringify({
                 nome: novoMedicamento.nome,
                 dosagem: novoMedicamento.dosagem,
-                horario: (novoMedicamento.horario || '08:00') + ':00',
+                horario: novoMedicamento.horario || '08:00',
                 dataInicio: toLocalISO(new Date()),
                 dataFim: toLocalISO(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)),
                 observacoes: novoMedicamento.duracao || ''
@@ -717,7 +721,7 @@ function Home({ onLogout }) {
     setEditMedicamento({
       nome: med.nome,
       dosagem: med.descricao || med.dosagem || '',
-      horario: med.agenda?.horario || med.horario || '',
+      horario: formatHorario(med.agenda?.horario || med.horario || ''),
       frequencia: med.tipo || med.frequencia || 'Diário',
       observacao: med.complemento || med.observacao || ''
     })
