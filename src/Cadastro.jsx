@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react'
 import './Cadastro.css'
+import API_CONFIG from './config'
 
-function Cadastro({ onGoToLogin, onLogin }) {
+const API_BASE_URL = API_CONFIG.BASE_URL
+
+function Cadastro({ onGoToLogin }) {
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
@@ -31,7 +34,7 @@ function Cadastro({ onGoToLogin, onLogin }) {
     }
     
     try {
-      const response = await fetch('http://localhost:8080/api/usuarios', {
+      const response = await fetch(`${API_BASE_URL}/api/usuarios`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

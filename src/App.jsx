@@ -65,7 +65,7 @@ function App() {
           {accessibilityMode ? '🔍 Modo Normal' : '🔍 Letras Grandes'}
         </button>
       </div>
-      <Cadastro onGoToLogin={() => setCurrentPage('login')} onLogin={handleLogin} />
+      <Cadastro onGoToLogin={() => setCurrentPage('login')} />
     </div>
   )
 }

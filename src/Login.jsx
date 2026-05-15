@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react'
 import './Login.css'
+import API_CONFIG from './config'
+
+const API_BASE_URL = API_CONFIG.BASE_URL
 
 function Login({ onGoToCadastro, onLogin }) {
   const [formData, setFormData] = useState({
@@ -7,7 +10,6 @@ function Login({ onGoToCadastro, onLogin }) {
     senha: ''
   })
 
-  const [isAdminLogin, setIsAdminLogin] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const handleChange = (e) => {
@@ -28,15 +30,14 @@ function Login({ onGoToCadastro, onLogin }) {
     setLoading(true)
 
     try {
-      const response = await fetch('http://localhost:8080/api/usuarios/login', {
+      const response = await fetch(`${API_BASE_URL}/api/usuarios/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           email: formData.email,
-          senha: formData.senha,
-          admin: isAdminLogin // já deixa preparado pro backend
+          senha: formData.senha
         })
       })
 
@@ -88,23 +89,8 @@ function Login({ onGoToCadastro, onLogin }) {
             />
           </div>
 
-          <div className="admin-checkbox">
-            <label>
-              <input
-                type="checkbox"
-                checked={isAdminLogin}
-                onChange={(e) => setIsAdminLogin(e.target.checked)}
-              />
-              <span>Entrar como administrador</span>
-            </label>
-          </div>
-
           <button type="submit" className="login-btn" disabled={loading}>
-            {loading
-              ? 'Entrando...'
-              : isAdminLogin
-              ? 'Login Admin'
-              : 'Login'}
+            {loading ? 'Entrando...' : 'Login'}
           </button>
         </form>
 

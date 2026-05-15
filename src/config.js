@@ -4,7 +4,7 @@ const API_CONFIG = {
   LOCAL: 'http://localhost:8080',
   
   // Para produção no somee.com (substitua pela sua URL)
-  PRODUCTION: 'https://seusite.somee.com/api',
+  PRODUCTION: 'https://seusite.somee.com',
   
   // URL atual (mude para PRODUCTION quando fizer deploy)
   BASE_URL: 'http://localhost:8080'

@@ -4,11 +4,13 @@ import './Accessibility.css'
 import './Adicionar.css'
 import Sobre from './Sobre'
 import pharmalifeLogo from './assets/pharmalife-logo.png'
+import API_CONFIG from './config'
+
+const API_BASE_URL = API_CONFIG.BASE_URL
 
 function Home({ onLogout }) {
   const [activeSection, setActiveSection] = useState('dashboard')
   const [isAdmin] = useState(() => sessionStorage.getItem('isAdmin') === 'true')
-  const [usuarios, setUsuarios] = useState([])
   const [novoMedicamento, setNovoMedicamento] = useState({
     nome: '',
     dosagem: '',
@@ -20,6 +22,7 @@ function Home({ onLogout }) {
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [helpSearchTerm, setHelpSearchTerm] = useState('')
   const [medicamentos, setMedicamentos] = useState([])
   const [loading, setLoading] = useState(false)
   const [estatisticas, setEstatisticas] = useState({ adesao: 0, tomados: 0, total: 0 })
@@ -102,7 +105,7 @@ function Home({ onLogout }) {
     const medicamentoId = med.id
     try {
       const now = new Date()
-      const response = await fetch(`http://localhost:8080/api/agenda/${agendaId}/medicamentos/${medicamentoId}/historico`, {
+      const response = await fetch(`${API_BASE_URL}/api/agenda/${agendaId}/medicamentos/${medicamentoId}/historico`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -116,7 +119,7 @@ function Home({ onLogout }) {
       if (response.ok) {
         const historicoCriado = await response.json()
         if (historicoCriado?.id) {
-          await fetch(`http://localhost:8080/api/historico/${historicoCriado.id}/confirmar`, { method: 'PATCH' })
+          await fetch(`${API_BASE_URL}/api/historico/${historicoCriado.id}/confirmar`, { method: 'PATCH' })
         }
         setMedicamentosTomados([...medicamentosTomados, medicamentoId])
         showToastMessage('✅ Medicamento marcado como tomado!')
@@ -126,7 +129,7 @@ function Home({ onLogout }) {
       } else {
         throw new Error('Erro no backend')
       }
-    } catch (error) {
+    } catch {
       const medicamentosTomadosLocal = JSON.parse(localStorage.getItem('medicamentosTomados') || '[]')
       medicamentosTomadosLocal.push({ medicamentoId, dataHora: new Date().toISOString(), usuario: sessionStorage.getItem('userName') })
       localStorage.setItem('medicamentosTomados', JSON.stringify(medicamentosTomadosLocal))
@@ -177,6 +180,229 @@ function Home({ onLogout }) {
     setEstatisticas({ adesao, tomados, total: totalMedicamentos, perdidos })
   }
   
+  const renderAjuda = () => {
+    const helpTopics = [
+      { icon: '01', title: 'Primeiros passos', text: 'Entrar, entender o painel e localizar as áreas principais.' },
+      { icon: 'RX', title: 'Gerenciar medicamentos', text: 'Cadastrar, revisar horários e confirmar tomadas.' },
+      { icon: 'H', title: 'Histórico e notificações', text: 'Acompanhar registros e manter lembretes ativos.' },
+      { icon: 'S', title: 'Segurança da conta', text: 'Editar dados, trocar senha e sair com segurança.' },
+      { icon: 'A', title: 'Configurações', text: 'Ativar modo escuro, letras grandes e preferências.' }
+    ]
+
+    const faqs = [
+      {
+        question: 'Como cadastro um medicamento?',
+        answer: 'Acesse Adicionar, preencha nome, dosagem, horário e frequência. Depois salve para aparecer na Agenda.'
+      },
+      {
+        question: 'Como marco um medicamento como tomado?',
+        answer: 'Na Página Inicial ou Agenda, use o botão de confirmação ao lado do medicamento no horário correto.'
+      },
+      {
+        question: 'Onde vejo meu histórico?',
+        answer: 'Entre em Histórico para consultar medicamentos confirmados, pendentes ou ignorados.'
+      },
+      {
+        question: 'Como aumento o tamanho das letras?',
+        answer: 'Use o botão Grande no menu lateral ou ative Modo de Acessibilidade em Configurações.'
+      }
+    ]
+
+    const searchText = helpSearchTerm.trim().toLowerCase()
+    const filteredTopics = searchText
+      ? helpTopics.filter(topic => `${topic.title} ${topic.text}`.toLowerCase().includes(searchText))
+      : helpTopics
+    const filteredFaqs = searchText
+      ? faqs.filter(faq => `${faq.question} ${faq.answer}`.toLowerCase().includes(searchText))
+      : faqs
+    const historicoBackend = Array.isArray(historicoCompleto) ? historicoCompleto : []
+    const medicamentosBackend = Array.isArray(medicamentos) ? medicamentos : []
+    const lembretesUsuario = Array.isArray(lembretes) ? lembretes : []
+    const onboardingSteps = [
+      {
+        title: 'Cadastrar primeiro medicamento',
+        done: medicamentosBackend.length > 0
+      },
+      {
+        title: 'Ter um horário definido na agenda',
+        done: medicamentosBackend.some(med => med.agenda?.horario || med.horario)
+      },
+      {
+        title: 'Gerar o primeiro registro no histórico',
+        done: historicoBackend.length > 0
+      },
+      {
+        title: 'Confirmar uma tomada',
+        done: historicoBackend.some(item => item.status === 'CONFIRMADO') || medicamentosTomados.length > 0
+      },
+      {
+        title: 'Criar um lembrete de saúde',
+        done: lembretesUsuario.length > 0
+      }
+    ]
+    const completedOnboardingSteps = onboardingSteps.filter(step => step.done).length
+    const onboardingPercent = Math.round((completedOnboardingSteps / onboardingSteps.length) * 100)
+
+    return (
+      <section className="help-page" aria-labelledby="help-title">
+        <header className="help-hero">
+          <div className="help-hero__content">
+            <nav className="help-breadcrumb" aria-label="Caminho da página">
+              <span>PharmaLife</span>
+              <span aria-hidden="true">/</span>
+              <strong>Ajuda</strong>
+            </nav>
+
+            <div className="help-title-row">
+              <span className="help-title-icon" aria-hidden="true">?</span>
+              <div>
+                <p className="help-eyebrow">Central de suporte</p>
+                <h2 id="help-title">Como usar o PharmaLife</h2>
+              </div>
+            </div>
+
+            <p className="help-subtitle">
+              Guia rápido e acessível para cadastrar medicamentos, acompanhar sua rotina e ajustar sua conta.
+            </p>
+
+            <label className="help-search">
+              <span className="sr-only">Buscar tópico de ajuda</span>
+              <span aria-hidden="true">Buscar</span>
+              <input
+                type="search"
+                placeholder="Busque por agenda, histórico, senha..."
+                value={helpSearchTerm}
+                onChange={(e) => setHelpSearchTerm(e.target.value)}
+              />
+            </label>
+          </div>
+
+          <div className="help-hero__visual" aria-hidden="true">
+            <svg viewBox="0 0 220 180" role="img">
+              <rect x="28" y="28" width="164" height="124" rx="24" fill="#EFF6FF" />
+              <rect x="48" y="52" width="124" height="16" rx="8" fill="#BFDBFE" />
+              <rect x="48" y="84" width="72" height="12" rx="6" fill="#93C5FD" />
+              <rect x="48" y="110" width="100" height="12" rx="6" fill="#D1FAE5" />
+              <circle cx="168" cy="116" r="30" fill="#10B981" opacity="0.18" />
+              <path d="M168 98v36M150 116h36" stroke="#059669" strokeWidth="10" strokeLinecap="round" />
+            </svg>
+          </div>
+        </header>
+
+        <div className="help-progress" aria-label="Progresso sugerido de primeiros passos">
+          <div>
+            <span>Onboarding</span>
+            <strong>{completedOnboardingSteps} de {onboardingSteps.length} passos essenciais</strong>
+          </div>
+          <div className="help-progress__bar">
+            <span style={{ width: `${onboardingPercent}%` }} />
+          </div>
+          <ul className="help-progress__steps" aria-label="Checklist de progresso">
+            {onboardingSteps.map((step) => (
+              <li key={step.title} className={step.done ? 'is-done' : ''}>
+                <span aria-hidden="true">{step.done ? '✓' : ''}</span>
+                {step.title}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="help-layout">
+          <div className="help-main">
+            <div className="help-topic-grid" aria-label="Tópicos de ajuda">
+              {filteredTopics.length > 0 ? filteredTopics.map((topic) => (
+                <article className="help-topic-card" key={topic.title} tabIndex="0">
+                  <span className="help-topic-icon" aria-hidden="true">{topic.icon}</span>
+                  <h3>{topic.title}</h3>
+                  <p>{topic.text}</p>
+                </article>
+              )) : (
+                <div className="help-empty-state" role="status">
+                  Nenhum tópico encontrado. Tente buscar por agenda, senha, histórico ou acessibilidade.
+                </div>
+              )}
+            </div>
+
+            <article className="help-panel">
+              <div className="help-section-heading">
+                <span className="help-section-icon" aria-hidden="true">RX</span>
+                <div>
+                  <p>Fluxo recomendado</p>
+                  <h3>Primeiros passos no tratamento</h3>
+                </div>
+              </div>
+
+              <ol className="help-timeline">
+                <li>
+                  <span>1</span>
+                  <div>
+                    <h4>Acesse sua conta</h4>
+                    <p>Faça login para manter medicamentos, lembretes e histórico salvos.</p>
+                  </div>
+                </li>
+                <li>
+                  <span>2</span>
+                  <div>
+                    <h4>Cadastre medicamentos</h4>
+                    <p>Informe dose, horário e frequência na área Adicionar.</p>
+                  </div>
+                </li>
+                <li>
+                  <span>3</span>
+                  <div>
+                    <h4>Confirme cada tomada</h4>
+                    <p>Use a Agenda ou a Página Inicial para registrar o medicamento tomado.</p>
+                  </div>
+                </li>
+              </ol>
+            </article>
+
+            <article className="help-panel">
+              <div className="help-section-heading">
+                <span className="help-section-icon" aria-hidden="true">FAQ</span>
+                <div>
+                  <p>Respostas rápidas</p>
+                  <h3>Perguntas frequentes</h3>
+                </div>
+              </div>
+
+              <div className="help-faq-list">
+                {filteredFaqs.length > 0 ? filteredFaqs.map((faq) => (
+                  <details className="help-faq" key={faq.question}>
+                    <summary>{faq.question}</summary>
+                    <p>{faq.answer}</p>
+                  </details>
+                )) : (
+                  <div className="help-empty-state" role="status">
+                    Nenhuma pergunta encontrada para esta busca.
+                  </div>
+                )}
+              </div>
+            </article>
+          </div>
+
+          <aside className="help-sidebar" aria-label="Ajuda complementar">
+            <div className="help-alerts">
+              <h3>Dicas rápidas</h3>
+              <div className="help-alert help-alert--success">
+                <strong>Horários atualizados</strong>
+                <span>Revise a agenda quando houver mudança na receita.</span>
+              </div>
+              <div className="help-alert help-alert--info">
+                <strong>Letras maiores</strong>
+                <span>Ative o modo de acessibilidade para melhorar a leitura.</span>
+              </div>
+              <div className="help-alert help-alert--warning">
+                <strong>Dúvida médica</strong>
+                <span>Procure um profissional antes de alterar dose ou frequência.</span>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+    )
+  }
+
   useEffect(() => {
     carregarEstatisticas()
   }, [medicamentos, historicoCompleto])
@@ -253,14 +479,14 @@ function Home({ onLogout }) {
       if (!usuarioId) { usuarioId = 1; sessionStorage.setItem('userId', usuarioId) }
 
       // 1. Busca agendas do usuário
-      const agendaResp = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}/agenda`)
+      const agendaResp = await fetch(`${API_BASE_URL}/api/usuarios/${usuarioId}/agenda`)
       if (!agendaResp.ok) throw new Error('Erro ao buscar agendas')
       const agendas = await agendaResp.json()
       const agendasArray = Array.isArray(agendas) ? agendas : []
 
       // 2. Para cada agenda, busca medicamentos
       const todasPromises = agendasArray.map(ag =>
-        fetch(`http://localhost:8080/api/agenda/${ag.id}/medicamentos`)
+        fetch(`${API_BASE_URL}/api/agenda/${ag.id}/medicamentos`)
           .then(r => r.ok ? r.json() : [])
           .then(meds => (Array.isArray(meds) ? meds : []).map(m => ({ ...m, agenda: ag })))
       )
@@ -268,7 +494,7 @@ function Home({ onLogout }) {
       const todosMedicamentos = resultados.flat()
       setMedicamentos(todosMedicamentos)
       localStorage.setItem('medicamentos', JSON.stringify(todosMedicamentos))
-    } catch (error) {
+    } catch {
       console.log('Usando localStorage como fallback')
       const medicamentosExistentes = JSON.parse(localStorage.getItem('medicamentos') || '[]')
       const medicamentosUsuario = Array.isArray(medicamentosExistentes)
@@ -291,14 +517,6 @@ function Home({ onLogout }) {
     frequencia: med.tipo || med.frequencia || '',
     status: med.statusMedicamento || 'próximo'
   })) : []
-
-  const historicoRemedios = [
-    { nome: 'Paracetamol 750mg', data: '15/12/2024', horario: '16:00' },
-    { nome: 'Amoxicilina 500mg', data: '10/12/2024', horario: '08:00' },
-    { nome: 'Dipirona 500mg', data: '08/12/2024', horario: '14:00' }
-  ]
-
-
 
   const renderDashboard = () => {
     const adesao = estatisticas.adesao
@@ -520,7 +738,7 @@ function Home({ onLogout }) {
           } else {
             // Cria agenda padrão
             const toLocalISO = (d) => d.toISOString().slice(0, 19) // remove o 'Z' final
-            const novaAgendaResp = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}/agenda`, {
+            const novaAgendaResp = await fetch(`${API_BASE_URL}/api/usuarios/${usuarioId}/agenda`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -544,7 +762,7 @@ function Home({ onLogout }) {
         }
 
         // 2. Cria medicamento vinculado à agenda
-        const response = await fetch(`http://localhost:8080/api/agenda/${agendaId}/medicamentos`, {
+        const response = await fetch(`${API_BASE_URL}/api/agenda/${agendaId}/medicamentos`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -605,7 +823,7 @@ function Home({ onLogout }) {
       let usuarioId = sessionStorage.getItem('userId')
       if (!usuarioId) { usuarioId = 1; sessionStorage.setItem('userId', usuarioId) }
 
-      const response = await fetch(`http://localhost:8080/api/usuarios/${usuarioId}/historico`)
+      const response = await fetch(`${API_BASE_URL}/api/usuarios/${usuarioId}/historico`)
       if (response.ok) {
         const historico = await response.json()
         const historicoArray = Array.isArray(historico) ? historico : []
@@ -613,7 +831,7 @@ function Home({ onLogout }) {
       } else {
         throw new Error('Backend não disponível')
       }
-    } catch (error) {
+    } catch {
       // Fallback para localStorage
       const userName = sessionStorage.getItem('userName')
       const medicamentosTomadosLocal = JSON.parse(localStorage.getItem('medicamentosTomados') || '[]')
@@ -657,7 +875,7 @@ function Home({ onLogout }) {
     try {
       const userId = sessionStorage.getItem('userId')
       if (userId) {
-        const response = await fetch(`http://localhost:8080/api/usuarios/${userId}`)
+        const response = await fetch(`${API_BASE_URL}/api/usuarios/${userId}`)
         if (response.ok) {
           const usuario = await response.json()
           setPerfil({
@@ -673,7 +891,7 @@ function Home({ onLogout }) {
           return
         }
       }
-    } catch (error) {
+    } catch {
       console.log('Usando dados do sessionStorage')
     }
     
@@ -731,7 +949,7 @@ function Home({ onLogout }) {
   const handleSaveEdit = async (e) => {
     e.preventDefault()
     try {
-      const response = await fetch(`http://localhost:8080/api/medicamentos/${editingMed.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/medicamentos/${editingMed.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -751,7 +969,7 @@ function Home({ onLogout }) {
       } else {
         showToastMessage(await getApiErrorMessage(response, 'Erro ao atualizar medicamento'))
       }
-    } catch (error) {
+    } catch {
       console.log('Usando localStorage para edição')
       // Fallback para localStorage se backend não disponível
       const medicamentosExistentes = JSON.parse(localStorage.getItem('medicamentos') || '[]')
@@ -770,7 +988,7 @@ function Home({ onLogout }) {
   const handleDeleteMedicamento = async (medId) => {
     if (window.confirm('Tem certeza que deseja excluir este medicamento?')) {
       try {
-        const response = await fetch(`http://localhost:8080/api/medicamentos/${medId}`, {
+        const response = await fetch(`${API_BASE_URL}/api/medicamentos/${medId}`, {
           method: 'DELETE'
         })
         if (response.ok) {
@@ -780,7 +998,7 @@ function Home({ onLogout }) {
         } else {
           showToastMessage(await getApiErrorMessage(response, 'Erro ao excluir medicamento'))
         }
-      } catch (error) {
+      } catch {
         const medicamentosExistentes = JSON.parse(localStorage.getItem('medicamentos') || '[]')
         const medicamento = medicamentosExistentes.find(med => med.id === medId)
         
@@ -811,7 +1029,7 @@ function Home({ onLogout }) {
   const handleDeleteMedicamentoModal = async () => {
     if (window.confirm('Tem certeza que deseja excluir este medicamento?')) {
       try {
-        const response = await fetch(`http://localhost:8080/api/medicamentos/${editingMed.id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/medicamentos/${editingMed.id}`, {
           method: 'DELETE'
         })
         if (response.ok) {
@@ -823,7 +1041,7 @@ function Home({ onLogout }) {
         } else {
           showToastMessage(await getApiErrorMessage(response, 'Erro ao excluir medicamento'))
         }
-      } catch (error) {
+      } catch {
         // Registrar exclusão no histórico
         const historicoExclusao = JSON.parse(localStorage.getItem('historicoExclusoes') || '[]')
         historicoExclusao.push({
@@ -1127,14 +1345,14 @@ function Home({ onLogout }) {
 
   const confirmarHistorico = async (id) => {
     try {
-      const resp = await fetch(`http://localhost:8080/api/historico/${id}/confirmar`, { method: 'PATCH' })
+      const resp = await fetch(`${API_BASE_URL}/api/historico/${id}/confirmar`, { method: 'PATCH' })
       if (resp.ok) { showToastMessage('✅ Uso confirmado!'); carregarHistoricoCompleto() }
     } catch { showToastMessage('Erro ao confirmar') }
   }
 
   const ignorarHistorico = async (id) => {
     try {
-      const resp = await fetch(`http://localhost:8080/api/historico/${id}/ignorar`, { method: 'PATCH' })
+      const resp = await fetch(`${API_BASE_URL}/api/historico/${id}/ignorar`, { method: 'PATCH' })
       if (resp.ok) { showToastMessage('Registro ignorado.'); carregarHistoricoCompleto() }
     } catch { showToastMessage('Erro ao ignorar') }
   }
@@ -1213,9 +1431,9 @@ function Home({ onLogout }) {
     
     try {
       const userId = sessionStorage.getItem('userId')
-      const usuarioAtualResp = await fetch(`http://localhost:8080/api/usuarios/${userId}`)
+      const usuarioAtualResp = await fetch(`${API_BASE_URL}/api/usuarios/${userId}`)
       const usuarioAtual = usuarioAtualResp.ok ? await usuarioAtualResp.json() : {}
-      const response = await fetch(`http://localhost:8080/api/usuarios/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/usuarios/${userId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1244,7 +1462,7 @@ function Home({ onLogout }) {
       } else {
         throw new Error('Erro no backend')
       }
-    } catch (error) {
+    } catch {
       // Fallback para localStorage
       sessionStorage.setItem('userName', perfil.nome)
       sessionStorage.setItem('userEmail', perfil.email)
@@ -1294,7 +1512,7 @@ function Home({ onLogout }) {
     
     try {
       const userId = sessionStorage.getItem('userId')
-      const response = await fetch(`http://localhost:8080/api/usuarios/${userId}/profile`, {
+      const response = await fetch(`${API_BASE_URL}/api/usuarios/${userId}/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1314,7 +1532,7 @@ function Home({ onLogout }) {
       } else {
         showToastMessage(await getApiErrorMessage(response, 'Senha atual incorreta'))
       }
-    } catch (error) {
+    } catch {
       // Fallback para localStorage
       const usuariosCadastrados = JSON.parse(localStorage.getItem('usuariosCadastrados') || '[]')
       const currentUser = sessionStorage.getItem('userName')
@@ -1361,7 +1579,7 @@ function Home({ onLogout }) {
     try {
       const userId = sessionStorage.getItem('userId')
       console.log("userId:", userId)
-      const response = await fetch(`http://localhost:8080/api/usuarios/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/usuarios/${userId}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1384,7 +1602,7 @@ function Home({ onLogout }) {
       } else {
         showToastMessage(await getApiErrorMessage(response, 'Senha incorreta'))
       }
-    } catch (error) {
+    } catch {
       // Fallback para localStorage
       const usuariosCadastrados = JSON.parse(localStorage.getItem('usuariosCadastrados') || '[]')
       const currentUser = sessionStorage.getItem('userName')
@@ -1672,7 +1890,7 @@ function Home({ onLogout }) {
 
   const carregarDadosAdmin = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/usuarios')
+      const response = await fetch(`${API_BASE_URL}/api/usuarios`)
       if (response.ok) {
         const usuarios = await response.json()
         const agora = new Date()
@@ -1693,7 +1911,7 @@ function Home({ onLogout }) {
       } else {
         throw new Error('Backend não disponível')
       }
-    } catch (error) {
+    } catch {
       // Fallback para localStorage
       const usuariosCadastrados = JSON.parse(localStorage.getItem('usuariosCadastrados') || '[]')
       setAdminData({
@@ -1768,6 +1986,7 @@ function Home({ onLogout }) {
       case 'historico': return renderHistorico()
       case 'configuracoes': return renderConfiguracoes()
       case 'adicionar': return renderAdicionar()
+      case 'ajuda': return renderAjuda()
       case 'sobre': return <Sobre />
       case 'admin': return renderAdmin()
       default: return renderDashboard()
@@ -1884,6 +2103,12 @@ function Home({ onLogout }) {
             onClick={() => setActiveSection('sobre')}
           >
             Sobre Nós
+          </button>
+          <button 
+            className={activeSection === 'ajuda' ? 'active' : ''} 
+            onClick={() => setActiveSection('ajuda')}
+          >
+            Ajuda
           </button>
           {isAdmin && (
             <button 
