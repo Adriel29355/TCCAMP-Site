@@ -64,6 +64,8 @@
 }
 
 .add-card {
+  display: flex;
+  flex-direction: column;
   background: white;
   border-radius: 20px;
   padding: 2rem;
@@ -123,6 +125,7 @@
 .form-modern {
   display: flex;
   flex-direction: column;
+  flex: 1;
   gap: 1.5rem;
 }
 
@@ -141,12 +144,25 @@
 }
 
 .input-modern, .select-modern, .textarea-modern {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  height: auto;
   padding: 1rem;
   border: 2px solid #e2e8f0;
   border-radius: 12px;
   font-size: 1rem;
+  line-height: 1.2;
   transition: all 0.3s ease;
   background: #f8f9fa;
+  color: #111827;
+  font-family: inherit;
+}
+
+.select-modern {
+  min-width: 0;
+  height: 44px;
+  padding: 0 2.25rem 0 1rem;
 }
 
 .input-modern:focus, .select-modern:focus, .textarea-modern:focus {
@@ -179,7 +195,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  margin-top: 1rem;
+  margin-top: auto;
 }
 
 .btn-add-modern.medicamento {

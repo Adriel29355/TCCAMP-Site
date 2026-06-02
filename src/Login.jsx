@@ -50,6 +50,7 @@ function Login({ onGoToCadastro, onLogin }) {
       // armazenamento mais organizado
       localStorage.setItem('usuario', JSON.stringify(data))
       sessionStorage.setItem('userName', data.nome)
+      sessionStorage.setItem('userEmail', data.email)
       sessionStorage.setItem('userId', data.id)
 
       onLogin(data)
@@ -64,7 +65,13 @@ function Login({ onGoToCadastro, onLogin }) {
   return (
     <div className="login-container">
       <div className="login-card">
-        <h1 className="login-title">Login</h1>
+        <div className="auth-brand">
+          <span className="auth-logo">+</span>
+          <div>
+            <h1 className="login-title">PharmaLife</h1>
+            <p>Acesse sua conta</p>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="input-group">

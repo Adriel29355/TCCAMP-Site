@@ -1,12 +1,26 @@
 import { useState, useEffect } from 'react'
 import './Home.css'
-import './Accessibility.css'
 import './Adicionar.css'
+import './Accessibility.css'
 import Sobre from './Sobre'
 import pharmalifeLogo from './assets/pharmalife-logo.png'
 import API_CONFIG from './config'
 
 const API_BASE_URL = API_CONFIG.BASE_URL
+
+const accessibilityScales = {
+  normal: { font: 1, spacing: 1, icon: 1, tap: 1 },
+  medium: { font: 1.25, spacing: 1.15, icon: 1.18, tap: 1.12 },
+  large: { font: 1.5, spacing: 1.32, icon: 1.35, tap: 1.25 },
+  xlarge: { font: 1.75, spacing: 1.5, icon: 1.55, tap: 1.38 }
+}
+
+const colorVisionModes = {
+  protanopia: 'Protanopia',
+  deuteranopia: 'Deuteranopia',
+  tritanopia: 'Tritanopia',
+  'high-contrast': 'Alto Contraste'
+}
 
 const widgetLabels = {
   add: '+',
@@ -227,8 +241,17 @@ function Home({ onLogout }) {
     comorbidade: ''
   })
   const [darkMode, setDarkMode] = useState(false)
-  const [accessibilityMode, setAccessibilityMode] = useState(() => {
-    return localStorage.getItem('accessibilityMode') === 'true'
+  const [accessibilityLevel, setAccessibilityLevel] = useState(() => {
+    const savedLevel = localStorage.getItem('accessibilityLevel')
+    if (['normal', 'medium', 'large', 'xlarge'].includes(savedLevel)) {
+      return savedLevel
+    }
+    return localStorage.getItem('accessibilityMode') === 'true' ? 'medium' : 'normal'
+  })
+  const accessibilityMode = accessibilityLevel !== 'normal'
+  const [colorVisionMode, setColorVisionMode] = useState(() => {
+    const savedMode = localStorage.getItem('colorVisionMode')
+    return Object.keys(colorVisionModes).includes(savedMode) ? savedMode : ''
   })
 
   const [showEditModal, setShowEditModal] = useState(false)
@@ -259,6 +282,23 @@ function Home({ onLogout }) {
   const [lembretes, setLembretes] = useState([])
   const [historicoCompleto, setHistoricoCompleto] = useState([])
 
+  useEffect(() => {
+    const scale = accessibilityScales[accessibilityLevel] || accessibilityScales.normal
+    const root = document.documentElement
+    root.style.setProperty('--font-scale', scale.font)
+    root.style.setProperty('--spacing-scale', scale.spacing)
+    root.style.setProperty('--icon-scale', scale.icon)
+    root.style.setProperty('--tap-scale', scale.tap)
+  }, [accessibilityLevel])
+
+  useEffect(() => {
+    if (colorVisionMode) {
+      document.documentElement.setAttribute('data-colorblind', colorVisionMode)
+    } else {
+      document.documentElement.removeAttribute('data-colorblind')
+    }
+  }, [colorVisionMode])
+
   const showToastMessage = (message) => {
     setToastMessage(message)
     setShowToast(true)
@@ -277,18 +317,65 @@ function Home({ onLogout }) {
     }
   }
 
+  const toBackendDateTime = (date) => {
+    const pad = (value) => String(value).padStart(2, '0')
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+  }
+
+  const getTreatmentEndDate = (duration) => {
+    const endDate = new Date()
+    const durations = {
+      '1 dia': 1,
+      '3 dias': 3,
+      '5 dias': 5,
+      '1-semana': 7,
+      '2 semanas': 14,
+      '1 mês': 30,
+      '3 meses': 90,
+      '6 meses': 180
+    }
+
+    endDate.setDate(endDate.getDate() + (durations[duration] || 365))
+    return endDate
+  }
+
+  const normalizeFrequency = (frequency) => {
+    const frequencies = {
+      diario: 'Diário',
+      'Diário': 'Diário',
+      '12h': 'A cada 12h',
+      '8h': 'A cada 8h',
+      Semanal: 'Semanal'
+    }
+
+    return frequencies[frequency] || frequency || 'Diário'
+  }
+
   const formatHorario = (horario) => {
     return typeof horario === 'string' ? horario.slice(0, 5) : ''
   }
 
-  const toggleAccessibilityMode = () => {
-    const newMode = !accessibilityMode
-    setAccessibilityMode(newMode)
-    localStorage.setItem('accessibilityMode', newMode.toString())
-    if (newMode) {
-      showToastMessage('Modo de Acessibilidade ATIVADO - Letras maiores e interface simplificada')
+  const updateAccessibilityLevel = (level) => {
+    setAccessibilityLevel(level)
+    localStorage.setItem('accessibilityLevel', level)
+    localStorage.setItem('accessibilityMode', (level !== 'normal').toString())
+    const levelLabels = {
+      normal: 'Normal (100%)',
+      medium: 'Médio (125%)',
+      large: 'Grande (150%)',
+      xlarge: 'Extra Grande (175%)'
+    }
+    showToastMessage(`Acessibilidade visual: ${levelLabels[level]}`)
+  }
+
+  const updateColorVisionMode = (mode) => {
+    setColorVisionMode(mode)
+    if (mode) {
+      localStorage.setItem('colorVisionMode', mode)
+      showToastMessage(`Modo para daltonismo: ${colorVisionModes[mode]}`)
     } else {
-      showToastMessage('Modo de Acessibilidade desativado')
+      localStorage.removeItem('colorVisionMode')
+      showToastMessage('Modo para daltonismo desativado')
     }
   }
 
@@ -302,8 +389,8 @@ function Home({ onLogout }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nome: med.nome,
-          dosagem: med.descricao || '',
-          observacoes: med.complemento || '',
+          dosagem: med.descricao || med.dosagem || med.agenda?.dosagem || '',
+          observacoes: med.complemento || med.agenda?.observacoes || '',
           horario: now.toTimeString().slice(0, 5),
           status: 'PENDENTE'
         })
@@ -334,19 +421,19 @@ function Home({ onLogout }) {
 
   const getStatusBadge = (status) => {
     const badges = {
-      'tomado': { color: '#10b981', text: 'Tomado' },
-      'pendente': { color: '#f59e0b', text: 'Pendente' },
-      'atrasado': { color: '#ef4444', text: 'Atrasado' },
-      'ATIVO': { color: '#10b981', text: 'Ativo' },
-      'INATIVO': { color: '#6b7280', text: 'Inativo' },
-      'PENDENTE': { color: '#f59e0b', text: 'Pendente' },
-      'CONFIRMADO': { color: '#10b981', text: 'Confirmado' },
-      'IGNORADO': { color: '#ef4444', text: 'Ignorado' },
-      'próximo': { color: '#3b82f6', text: 'Próximo' },
-      'aberta': { color: '#10b981', text: 'Aberta' },
-      'fechada': { color: '#6b7280', text: 'Fechada' }
+      tomado: { tone: 'confirmed', icon: 'OK', text: 'Tomado' },
+      pendente: { tone: 'pending', icon: 'PD', text: 'Pendente' },
+      atrasado: { tone: 'missed', icon: '!', text: 'Atrasado' },
+      ATIVO: { tone: 'confirmed', icon: 'OK', text: 'Ativo' },
+      INATIVO: { tone: 'neutral', icon: '-', text: 'Inativo' },
+      PENDENTE: { tone: 'pending', icon: 'PD', text: 'Pendente' },
+      CONFIRMADO: { tone: 'confirmed', icon: 'OK', text: 'Confirmado' },
+      IGNORADO: { tone: 'missed', icon: 'EXC', text: 'Ignorado' },
+      próximo: { tone: 'info', icon: 'PM', text: 'Próximo' },
+      aberta: { tone: 'confirmed', icon: 'OK', text: 'Aberta' },
+      fechada: { tone: 'neutral', icon: '-', text: 'Fechada' }
     }
-    return badges[status] || { color: '#9ca3af', text: 'N/A' }
+    return badges[status] || { tone: 'neutral', icon: '-', text: 'N/A' }
   }
 
   const carregarEstatisticas = () => {
@@ -492,7 +579,12 @@ function Home({ onLogout }) {
           <ul className="help-progress__steps" aria-label="Checklist de progresso">
             {onboardingSteps.map((step) => (
               <li key={step.title} className={step.done ? 'is-done' : ''}>
-                <span aria-hidden="true">{step.done ? <Widget type="checklist" /> : ''}</span>
+                <input
+                  type="checkbox"
+                  checked={step.done}
+                  readOnly
+                  aria-label={step.title}
+                />
                 {step.title}
               </li>
             ))}
@@ -704,10 +796,10 @@ function Home({ onLogout }) {
   // Medicamento do backend: { id, nome, descricao (dosagem), tipo (frequencia), complemento, agenda: { horario } }
   const agendaMedicamentos = Array.isArray(medicamentos) ? medicamentos.map(med => ({
     ...med,
-    dosagem: med.descricao || med.dosagem || '',
+    dosagem: med.descricao || med.dosagem || med.agenda?.dosagem || '',
     horario: formatHorario(med.agenda?.horario || med.horario || ''),
-    frequencia: med.tipo || med.frequencia || '',
-    status: med.statusMedicamento || 'próximo'
+    frequencia: normalizeFrequency(med.tipo || med.frequencia || ''),
+    status: med.statusMedicamento || 'ATIVO'
   })) : []
 
   const renderDashboard = () => {
@@ -771,7 +863,7 @@ function Home({ onLogout }) {
                   <br />
                   <button 
                     onClick={() => setActiveSection('adicionar')}
-                    style={{marginTop: '10px', padding: '8px 16px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer'}}
+                    className="empty-action"
                   >
                     Adicionar Primeiro Medicamento
                   </button>
@@ -873,7 +965,7 @@ function Home({ onLogout }) {
                   <br />
                   <button 
                     onClick={() => setActiveSection('adicionar')}
-                    style={{marginTop: '10px', padding: '8px 16px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer'}}
+                    className="empty-action"
                   >
                     Adicionar Lembrete
                   </button>
@@ -928,7 +1020,6 @@ function Home({ onLogout }) {
             sessionStorage.setItem('agendaId', agendaId)
           } else {
             // Cria agenda padrão
-            const toLocalISO = (d) => d.toISOString().slice(0, 19) // remove o 'Z' final
             const novaAgendaResp = await fetch(`${API_BASE_URL}/api/usuarios/${usuarioId}/agenda`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -936,8 +1027,8 @@ function Home({ onLogout }) {
                 nome: novoMedicamento.nome,
                 dosagem: novoMedicamento.dosagem,
                 horario: novoMedicamento.horario || '08:00',
-                dataInicio: toLocalISO(new Date()),
-                dataFim: toLocalISO(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)),
+                dataInicio: toBackendDateTime(new Date()),
+                dataFim: toBackendDateTime(getTreatmentEndDate(novoMedicamento.duracao)),
                 observacoes: novoMedicamento.duracao || ''
               })
             })
@@ -959,8 +1050,9 @@ function Home({ onLogout }) {
           body: JSON.stringify({
             nome: novoMedicamento.nome,
             descricao: novoMedicamento.dosagem,
-            tipo: novoMedicamento.frequencia || 'Diário',
-            complemento: novoMedicamento.duracao || ''
+            tipo: normalizeFrequency(novoMedicamento.frequencia),
+            complemento: novoMedicamento.duracao || '',
+            statusMedicamento: 'ATIVO'
           })
         })
         if (response.ok) {
@@ -1140,14 +1232,34 @@ function Home({ onLogout }) {
   const handleSaveEdit = async (e) => {
     e.preventDefault()
     try {
+      if (editingMed.agenda?.id) {
+        const agendaResponse = await fetch(`${API_BASE_URL}/api/agenda/${editingMed.agenda.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nome: editMedicamento.nome,
+            dosagem: editMedicamento.dosagem,
+            horario: editMedicamento.horario || editingMed.agenda.horario || '08:00',
+            dataInicio: editingMed.agenda.dataInicio || toBackendDateTime(new Date()),
+            dataFim: editingMed.agenda.dataFim || toBackendDateTime(getTreatmentEndDate(editingMed.complemento)),
+            observacoes: editMedicamento.observacao || editingMed.agenda.observacoes || ''
+          })
+        })
+        if (!agendaResponse.ok) {
+          showToastMessage(await getApiErrorMessage(agendaResponse, 'Erro ao atualizar agenda'))
+          return
+        }
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/medicamentos/${editingMed.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nome: editMedicamento.nome,
           descricao: editMedicamento.dosagem,
-          tipo: editMedicamento.frequencia,
-          complemento: editMedicamento.observacao || ''
+          tipo: normalizeFrequency(editMedicamento.frequencia),
+          complemento: editMedicamento.observacao || '',
+          statusMedicamento: editingMed.statusMedicamento || 'ATIVO'
         })
       })
       
@@ -1292,7 +1404,7 @@ function Home({ onLogout }) {
               <br />
               <button 
                 onClick={() => setActiveSection('adicionar')}
-                style={{marginTop: '15px', padding: '10px 20px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer'}}
+                className="empty-action"
               >
                 Adicionar Medicamento
               </button>
@@ -1306,7 +1418,10 @@ function Home({ onLogout }) {
                   <span className="med-row__name">{med.nome}</span>
                   <span className="med-row__meta">{med.dosagem} · {med.horario} · {med.frequencia}</span>
                 </div>
-                <span className="badge" style={{backgroundColor: badge.color, flexShrink: 0}}>{badge.text}</span>
+                <span className={`badge status-badge status-badge--${badge.tone}`}>
+                  <span className="status-badge__icon" aria-hidden="true">{badge.icon}</span>
+                  {badge.text}
+                </span>
                 <div className="med-row__actions">
                   {!jaTomado && med.status !== 'tomado' && (
                     <button className="btn-take" onClick={() => marcarComoTomado(med)} title="Marcar como tomado"><Widget type="checklist" /> Tomado</button>
@@ -1546,14 +1661,6 @@ function Home({ onLogout }) {
         default: return <Widget type="list" />
       }
     }
-    const getStatusColor = (status) => {
-      switch(status) {
-        case 'CONFIRMADO': return '#10b981'
-        case 'IGNORADO': return '#ef4444'
-        case 'PENDENTE': return '#f59e0b'
-        default: return '#6b7280'
-      }
-    }
     const filteredHistorico = Array.isArray(historicoCompleto) ? historicoCompleto.filter((item) => {
       if (historyFilter === 'all') return true
       const date = item.dataConfirmacao ? new Date(item.dataConfirmacao) : null
@@ -1590,7 +1697,7 @@ function Home({ onLogout }) {
               return (
                 <div key={index} className="card historico-item">
                   <div className="historico-header">
-                    <div className="historico-icon" style={{backgroundColor: getStatusColor(item.status)}}>
+                    <div className={`historico-icon historico-icon--${(item.status || 'default').toLowerCase()}`}>
                       {getStatusIcon(item.status)}
                     </div>
                     <div className="historico-info">
@@ -1603,9 +1710,9 @@ function Home({ onLogout }) {
                     </div>
                   </div>
                   {item.status === 'PENDENTE' && (
-                    <div style={{display: 'flex', gap: '8px', marginTop: '10px'}}>
-                      <button onClick={() => confirmarHistorico(item.id)} style={{flex: 1, padding: '8px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer'}}><Widget type="checklist" /> Confirmar</button>
-                      <button onClick={() => ignorarHistorico(item.id)} style={{flex: 1, padding: '8px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer'}}><Widget type="delete" /> Ignorar</button>
+                    <div className="pending-actions">
+                      <button onClick={() => confirmarHistorico(item.id)} className="btn-status btn-status--confirm"><Widget type="checklist" /> Confirmar</button>
+                      <button onClick={() => ignorarHistorico(item.id)} className="btn-status btn-status--ignore"><Widget type="delete" /> Ignorar</button>
                     </div>
                   )}
                   {item.observacoes && !isDurationOnly && <div className="historico-detalhes"><p>{item.observacoes}</p></div>}
@@ -1857,10 +1964,50 @@ function Home({ onLogout }) {
             <input 
               type="checkbox" 
               checked={accessibilityMode}
-              onChange={toggleAccessibilityMode}
+              onChange={(e) => updateAccessibilityLevel(e.target.checked ? 'medium' : 'normal')}
             />
           </label>
+          <label>
+            <span>Níveis de acessibilidade visual</span>
+            <select
+              value={accessibilityLevel}
+              onChange={(e) => updateAccessibilityLevel(e.target.value)}
+              className="select-modern accessibility-level-select"
+            >
+              <option value="normal">Normal (100%)</option>
+              <option value="medium">Médio (125%)</option>
+              <option value="large">Grande (150%)</option>
+              <option value="xlarge">Extra Grande (175%)</option>
+            </select>
+          </label>
 
+        </div>
+        <div className="card accessibility-settings-card">
+          <h4>Acessibilidade</h4>
+          <fieldset className="color-vision-options">
+            <legend>Modo para daltonismo</legend>
+            {Object.entries(colorVisionModes).map(([mode, label]) => (
+              <label key={mode} className="color-vision-option">
+                <input
+                  type="radio"
+                  name="colorVisionMode"
+                  value={mode}
+                  checked={colorVisionMode === mode}
+                  onChange={() => updateColorVisionMode(mode)}
+                />
+                <span className={`color-vision-swatch color-vision-swatch--${mode}`} aria-hidden="true"></span>
+                <span>{label}</span>
+              </label>
+            ))}
+          </fieldset>
+          <button
+            type="button"
+            className="color-vision-reset"
+            onClick={() => updateColorVisionMode('')}
+            disabled={!colorVisionMode}
+          >
+            Voltar para configuração padrão
+          </button>
         </div>
         <div className="card">
           <h4>Perfil</h4>
@@ -2169,7 +2316,11 @@ function Home({ onLogout }) {
   }
 
   return (
-    <div className={`home-container ${darkMode ? 'dark-mode' : ''} ${accessibilityMode ? 'accessibility-mode' : ''}`}>
+    <div
+      className={`home-container ${darkMode ? 'dark-mode' : ''} ${accessibilityMode ? 'accessibility-mode' : ''}`}
+      data-accessibility-level={accessibilityLevel}
+      data-colorblind={colorVisionMode || undefined}
+    >
       <aside className="sidebar">
         <div className="sidebar-header">
           <div className="logo-section">
@@ -2343,8 +2494,8 @@ function Home({ onLogout }) {
         {showDeleteAccountModal && (
           <div className="modal-overlay" onClick={() => setShowDeleteAccountModal(false)}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
-              <h3 style={{color: '#ef4444'}}><Widget type="delete" className="title-widget" />Excluir Conta</h3>
-              <div style={{marginBottom: '20px', padding: '15px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px'}}>
+              <h3 className="danger-title"><Widget type="delete" className="title-widget" />Excluir Conta</h3>
+              <div className="danger-panel">
                 <p style={{color: '#dc2626', fontWeight: '600', margin: '0 0 10px 0'}}><Widget type="warning" className="title-widget" />ATENÇÃO:</p>
                 <p style={{color: '#7f1d1d', margin: '0', fontSize: '14px'}}>Esta ação é irreversível! Todos os seus medicamentos, histórico e dados pessoais serão perdidos permanentemente.</p>
               </div>

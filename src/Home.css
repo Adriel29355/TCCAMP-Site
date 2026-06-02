@@ -1739,27 +1739,41 @@ button .ui-widget {
   font-weight: 700;
 }
 
-.help-progress__steps li > span {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
+.help-progress__steps input[type="checkbox"] {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  min-width: 22px;
+  height: 22px;
+  margin: 0;
   border: 2px solid #cbd5e1;
-  border-radius: 999px;
-  color: white;
-  font-size: 0.8rem;
-  font-weight: 900;
+  border-radius: 6px;
   background: #ffffff;
+  cursor: default;
+}
+
+.help-progress__steps input[type="checkbox"]::before {
+  content: "";
+  width: 10px;
+  height: 6px;
+  border-left: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  opacity: 0;
+  transform: rotate(-45deg) translate(1px, -1px);
 }
 
 .help-progress__steps li.is-done {
   color: #065f46;
 }
 
-.help-progress__steps li.is-done > span {
+.help-progress__steps input[type="checkbox"]:checked {
   border-color: var(--help-green);
   background: var(--help-green);
+}
+
+.help-progress__steps input[type="checkbox"]:checked::before {
+  opacity: 1;
 }
 
 .help-layout {
@@ -2909,7 +2923,7 @@ button .ui-widget {
   color: #cbd5e1;
 }
 
-.dark-mode .help-progress__steps li > span {
+.dark-mode .help-progress__steps input[type="checkbox"] {
   background: #0f172a;
   border-color: #475569;
 }
@@ -2918,7 +2932,7 @@ button .ui-widget {
   color: #bbf7d0;
 }
 
-.dark-mode .help-progress__steps li.is-done > span {
+.dark-mode .help-progress__steps input[type="checkbox"]:checked {
   background: #10b981;
   border-color: #10b981;
 }
@@ -2992,12 +3006,15 @@ button .ui-widget {
 .nav-buttons button.active::before { display: none; }
 .nav-buttons button::before { display: inline-flex; justify-content: center; width: 20px; color: currentColor; font-weight: 800; font-size: 13px; }
 .sidebar-user { display: flex; align-items: center; gap: 10px; margin: auto 12px 16px; padding: 12px; border-top: 1px solid var(--pharma-border); }
-.user-avatar { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: rgba(26, 58, 107, 0.1); color: var(--pharma-primary); font-weight: 800; }
-.user-summary strong { display: block; max-width: 130px; overflow: hidden; color: var(--pharma-text); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
-.user-summary button { display: inline-flex; align-items: center; gap: 4px; padding: 0; margin-top: 2px; background: transparent; border: 0; color: var(--pharma-muted); cursor: pointer; font-size: 13px; }
+.user-avatar { display: grid; place-items: center; width: 36px; min-width: 36px; height: 36px; border-radius: 50%; background: rgba(26, 58, 107, 0.1); color: var(--pharma-primary); font-size: 13px; font-weight: 800; line-height: 1; }
+.user-summary { display: flex; min-width: 0; flex-direction: column; justify-content: center; gap: 3px; }
+.user-summary strong { display: block; max-width: 130px; overflow: hidden; color: var(--pharma-text); font-size: 13px; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+.user-summary button { display: inline-flex; width: fit-content; align-items: center; gap: 5px; min-height: 18px; padding: 0; margin: 0; background: transparent; border: 0; color: var(--pharma-muted); cursor: pointer; font-size: 13px; line-height: 1.2; }
+.user-summary button .ui-widget { width: 15px; min-width: 15px; height: 15px; margin: 0; font-size: 15px; }
 .user-summary button:hover { color: var(--pharma-primary); }
 .main-content { padding: 32px; background: var(--pharma-bg); }
-.dashboard-container, .adicionar-container, .help-page { max-width: 1180px; padding: 0; }
+.dashboard-container, .adicionar-container { max-width: 1180px; padding: 0; }
+.help-page { max-width: none; min-height: calc(100vh - 64px); padding: 0; }
 .section-title, .page-title { margin: 0 0 24px; color: var(--pharma-primary); background: none; -webkit-text-fill-color: currentColor; font-size: 24px; line-height: 1.2; letter-spacing: 0; }
 .dashboard-header { display: block; margin-bottom: 20px; padding: 28px; background: var(--pharma-primary); border-radius: 12px; box-shadow: var(--pharma-shadow); }
 .welcome-title { font-size: 28px; line-height: 1.2; }
@@ -3025,7 +3042,7 @@ button .ui-widget { color: currentColor; }
 .circle { stroke: var(--pharma-success); }
 .circle-bg { stroke: rgba(26, 58, 107, 0.12); }
 .search-container { position: relative; justify-content: flex-start; gap: 12px; }
-.search-container::before, .help-search::before { content: "⌕"; position: absolute; left: 14px; z-index: 1; color: var(--pharma-muted); font-size: 16px; }
+.search-container::before { content: "⌕"; position: absolute; left: 14px; z-index: 1; color: var(--pharma-muted); font-size: 16px; }
 .search-input { height: 40px; max-width: 420px; padding: 0 14px 0 38px; background: #fff; border: 1px solid var(--pharma-border); border-radius: 8px; font-size: 15px; backdrop-filter: none; }
 .search-input:focus, .input-modern:focus, .select-modern:focus, .profile-form input:focus, .profile-form select:focus, .help-search input:focus { border-color: var(--pharma-primary); box-shadow: 0 0 0 3px rgba(26,58,107,0.12); }
 .btn-add-med, .btn-add-modern.medicamento, .btn-save { background: var(--pharma-primary); border-radius: 8px; box-shadow: none; }
@@ -3051,7 +3068,41 @@ button .ui-widget { color: currentColor; }
 .historico { gap: 8px; }
 .historico-item { height: auto; padding: 10px 12px; text-align: left; overflow: visible; }
 .historico-header { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 10px; }
-.historico-icon { width: 32px; height: 32px; border-radius: 50%; }
+.historico-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(107, 114, 128, 0.24);
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.historico-icon--confirmado {
+  border-color: rgba(16, 185, 129, 0.38);
+  background: #d1fae5;
+  color: #047857;
+}
+
+.historico-icon--ignorado {
+  border-color: rgba(239, 68, 68, 0.34);
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.historico-icon--pendente {
+  border-color: rgba(245, 158, 11, 0.36);
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.historico-icon .ui-widget {
+  margin: 0;
+  background: transparent;
+  color: currentColor;
+  box-shadow: none;
+}
 .historico-info h4 { margin: 0; color: var(--pharma-text); font-size: 14px; }
 .historico-acao { display: inline-flex; margin-top: 4px; padding: 3px 8px; border-radius: 8px; background: rgba(26,58,107,0.08); color: var(--pharma-primary); font-size: 11px; font-weight: 700; }
 .historico-time { align-items: flex-end; text-align: right; }
@@ -3069,14 +3120,13 @@ button .ui-widget { color: currentColor; }
 .help-title-row h2 { color: var(--pharma-primary); font-size: 24px; }
 .help-search { position: relative; display: block; max-width: 640px; }
 .help-search > span:not(.sr-only) { display: none; }
-.help-search input { width: 100%; height: 44px; padding: 0 14px 0 38px; border: 1px solid var(--pharma-border); border-radius: 8px; font-size: 15px; }
+.help-search input { width: 100%; height: 44px; padding: 0 14px; border: 1px solid var(--pharma-border); border-radius: 8px; font-size: 15px; }
 .help-layout { display: block; }
 .help-topic-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .help-topic-card { min-height: 150px; padding: 20px; text-align: center; }
 .help-topic-icon { margin: 0 auto 12px; font-size: 24px; color: var(--pharma-primary); }
 .help-progress__steps { display: flex; gap: 10px; }
 .help-progress__steps li { font-size: 0; }
-.help-progress__steps li span { width: 22px; height: 22px; border-radius: 50%; }
 .help-alert { display: flex; align-items: center; gap: 10px; padding: 10px 0; border: 0; border-bottom: 1px solid var(--pharma-border); background: transparent; }
 
 @media (max-width: 900px) {
@@ -3510,14 +3560,6 @@ button .ui-widget { color: currentColor; }
   width: 100%;
 }
 
-.historico-icon {
-  color: #fff;
-}
-
-.historico-icon .ui-widget {
-  color: #fff;
-}
-
 .historico-acao {
   font-size: 11px;
   text-transform: none;
@@ -3684,3 +3726,305 @@ button .ui-widget { color: currentColor; }
   flex-shrink: 0;
 }
 
+/* Dark mode final pass: keep this after the light-theme refinements. */
+.home-container.dark-mode {
+  --pharma-primary: #60a5fa;
+  --pharma-primary-hover: #3b82f6;
+  --pharma-success: #34d399;
+  --pharma-muted: #aebbd0;
+  --pharma-border: #263449;
+  --pharma-bg: #0b1220;
+  --pharma-soft-blue: #162033;
+  --pharma-text: #e5e7eb;
+  --pharma-shadow: none;
+  background: #0b1220;
+  color: var(--pharma-text);
+}
+
+.home-container.dark-mode .main-content {
+  background: #0f172a;
+  color: var(--pharma-text);
+}
+
+.home-container.dark-mode .sidebar {
+  background: #020617;
+  border-right-color: #1e293b;
+  box-shadow: none;
+}
+
+.home-container.dark-mode .sidebar-header {
+  background: #020617;
+  border-bottom-color: #1e293b;
+}
+
+.home-container.dark-mode .sidebar-user {
+  border-top-color: #334155;
+}
+
+.home-container.dark-mode .user-avatar {
+  background: #111827;
+  border: 1px solid #475569;
+  color: #93c5fd;
+}
+
+.home-container.dark-mode .user-summary strong {
+  color: #e5e7eb;
+}
+
+.home-container.dark-mode .user-summary button {
+  color: #cbd5e1;
+}
+
+.home-container.dark-mode .user-summary button:hover {
+  color: #93c5fd;
+}
+
+.home-container.dark-mode .nav-buttons button {
+  color: #cbd5e1;
+}
+
+.home-container.dark-mode .nav-buttons button:hover {
+  background: #111827;
+  color: #93c5fd;
+}
+
+.home-container.dark-mode .nav-buttons button.active {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.home-container.dark-mode .section-title,
+.home-container.dark-mode .page-title,
+.home-container.dark-mode .header-content .page-title {
+  background: transparent;
+  color: #f8fafc;
+  -webkit-text-fill-color: currentColor;
+}
+
+.home-container.dark-mode .dashboard-card,
+.home-container.dark-mode .card,
+.home-container.dark-mode .add-card,
+.home-container.dark-mode .help-topic-card,
+.home-container.dark-mode .help-panel,
+.home-container.dark-mode .help-alerts,
+.home-container.dark-mode .tips-section,
+.home-container.dark-mode .tip-card,
+.home-container.dark-mode .historico-item,
+.home-container.dark-mode .sobre-content {
+  background: #111827 !important;
+  border-color: #263449 !important;
+  color: var(--pharma-text) !important;
+  box-shadow: none !important;
+}
+
+.home-container.dark-mode .dashboard-card:hover,
+.home-container.dark-mode .card:hover,
+.home-container.dark-mode .add-card:hover,
+.home-container.dark-mode .help-topic-card:hover {
+  box-shadow: none;
+}
+
+.home-container.dark-mode .configuracoes .card {
+  background: #111827 !important;
+  border-color: #263449 !important;
+  overflow: hidden;
+}
+
+.home-container.dark-mode .configuracoes .card h4 {
+  background: #162033;
+  border-bottom-color: #263449;
+  color: #e5e7eb;
+}
+
+.home-container.dark-mode .configuracoes .card label,
+.home-container.dark-mode .perfil-info .item {
+  background: #111827;
+  border-bottom-color: #263449;
+  color: #e5e7eb;
+}
+
+.home-container.dark-mode .configuracoes .card label span,
+.home-container.dark-mode .perfil-info .item span {
+  color: #e5e7eb;
+}
+
+.home-container.dark-mode .perfil-info .item span:last-child {
+  color: #f8fafc;
+}
+
+.home-container.dark-mode .configuracoes input[type="checkbox"] {
+  background: #475569;
+}
+
+.home-container.dark-mode .configuracoes input[type="checkbox"]::after {
+  background: #f8fafc;
+}
+
+.home-container.dark-mode .configuracoes input[type="checkbox"]:checked {
+  background: #2563eb;
+}
+
+.home-container.dark-mode .settings-action--primary,
+.home-container.dark-mode .settings-actions .settings-action--primary {
+  background: #1d4ed8;
+  border: 1px solid #2563eb;
+  color: #ffffff;
+}
+
+.home-container.dark-mode .settings-action--primary:hover,
+.home-container.dark-mode .settings-actions .settings-action--primary:hover {
+  background: #2563eb;
+}
+
+.home-container.dark-mode .settings-action--danger,
+.home-container.dark-mode .settings-actions .settings-action--danger {
+  background: #111827;
+  border: 1px solid #f87171;
+  color: #fecaca;
+}
+
+.home-container.dark-mode .settings-action--danger:hover,
+.home-container.dark-mode .settings-actions .settings-action--danger:hover {
+  background: rgba(127, 29, 29, 0.32);
+  color: #ffffff;
+}
+
+.home-container.dark-mode .card-header-modern,
+.home-container.dark-mode .card-header,
+.home-container.dark-mode .pharmacy-header {
+  border-bottom-color: #263449;
+}
+
+.home-container.dark-mode .card-header-modern h3,
+.home-container.dark-mode .add-card h3,
+.home-container.dark-mode .card-title-section h3,
+.home-container.dark-mode .help-panel h3,
+.home-container.dark-mode .historico-info h4,
+.home-container.dark-mode .history-med,
+.home-container.dark-mode .med-row__name {
+  color: #f8fafc !important;
+}
+
+.home-container.dark-mode .card-title-section p,
+.home-container.dark-mode .page-subtitle,
+.home-container.dark-mode .med-dosage,
+.home-container.dark-mode .history-time,
+.home-container.dark-mode .historico-time,
+.home-container.dark-mode .med-row__meta,
+.home-container.dark-mode .tip-card p {
+  color: #cbd5e1 !important;
+}
+
+.home-container.dark-mode .input-modern,
+.home-container.dark-mode .select-modern,
+.home-container.dark-mode .textarea-modern,
+.home-container.dark-mode .search-input,
+.home-container.dark-mode .profile-form input,
+.home-container.dark-mode .profile-form select {
+  background: #0b1220 !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+.home-container.dark-mode .input-modern::placeholder,
+.home-container.dark-mode .textarea-modern::placeholder,
+.home-container.dark-mode .search-input::placeholder {
+  color: #93a4b8 !important;
+}
+
+.home-container.dark-mode .input-modern:focus,
+.home-container.dark-mode .select-modern:focus,
+.home-container.dark-mode .textarea-modern:focus,
+.home-container.dark-mode .search-input:focus,
+.home-container.dark-mode .profile-form input:focus,
+.home-container.dark-mode .profile-form select:focus {
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.18) !important;
+}
+
+.home-container.dark-mode .history-tabs button {
+  background: #111827;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+.home-container.dark-mode .history-tabs button:hover,
+.home-container.dark-mode .history-tabs button.active {
+  background: #1d4ed8;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+.home-container.dark-mode .historico-item,
+.home-container.dark-mode .timeline-item,
+.home-container.dark-mode .history-item,
+.home-container.dark-mode .reminder-item,
+.home-container.dark-mode .med-row,
+.home-container.dark-mode .item,
+.home-container.dark-mode .pharmacy-item,
+.home-container.dark-mode .integrante-card {
+  background: #111827 !important;
+  border-color: #263449 !important;
+}
+
+.home-container.dark-mode .historico-acao {
+  background: #162033;
+  color: #93c5fd !important;
+}
+
+.home-container.dark-mode .historico-icon {
+  background: #162033;
+  border-color: #334155;
+  color: #93c5fd;
+}
+
+.home-container.dark-mode .ui-widget {
+  background: rgba(96, 165, 250, 0.14);
+  color: #93c5fd;
+  box-shadow: inset 0 0 0 1px rgba(147, 197, 253, 0.16);
+}
+
+.home-container.dark-mode button .ui-widget,
+.home-container.dark-mode .historico-icon .ui-widget {
+  background: transparent;
+  color: currentColor;
+  box-shadow: none;
+}
+
+.home-container.dark-mode .btn-add-modern.medicamento {
+  background: #2fb676;
+  color: #ffffff;
+}
+
+.home-container.dark-mode .btn-add-modern.lembrete,
+.home-container.dark-mode .btn-add-med,
+.home-container.dark-mode .btn-save {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.home-container.dark-mode .btn-add-modern:hover,
+.home-container.dark-mode .btn-add-med:hover,
+.home-container.dark-mode .btn-save:hover {
+  filter: brightness(1.08);
+}
+
+.home-container.dark-mode .dashboard-header {
+  background: #111827;
+  border: 1px solid #263449;
+  color: #f8fafc;
+}
+
+.home-container.dark-mode .adicionar-header {
+  background: transparent;
+  background-image: none;
+  border: 0;
+}
+
+.home-container.dark-mode .adicionar-header .page-title {
+  background: transparent;
+  background-image: none;
+  color: #f8fafc;
+  -webkit-text-fill-color: currentColor;
+}

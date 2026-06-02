@@ -45,3 +45,100 @@ button .ui-widget {
 .btn-icon {
   margin-right: 0.5rem;
 }
+
+.auth-shell {
+  position: relative;
+  min-height: 100vh;
+  background: #f8f9fa;
+}
+
+.accessibility-header {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 20;
+}
+
+.accessibility-toggle-login {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid #d8dee8;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1A3A6B;
+  box-shadow: 0 8px 18px rgba(16, 24, 40, 0.08);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.accessibility-toggle-login:hover {
+  border-color: #1A3A6B;
+  background: #f8fafc;
+  box-shadow: 0 10px 22px rgba(16, 24, 40, 0.12);
+}
+
+.accessibility-toggle-login:focus-visible {
+  outline: 3px solid rgba(26, 58, 107, 0.3);
+  outline-offset: 2px;
+}
+
+.auth-shell.accessibility-mode {
+  font-size: 1.2rem;
+}
+
+.auth-shell.accessibility-mode .accessibility-toggle-login {
+  min-height: 48px;
+  padding: 0 18px;
+  font-size: 1.05rem;
+}
+
+.auth-shell.accessibility-mode .login-card,
+.auth-shell.accessibility-mode .cadastro-card {
+  max-width: min(100% - 40px, 760px);
+}
+
+.auth-shell.accessibility-mode .auth-brand p,
+.auth-shell.accessibility-mode .signup-link,
+.auth-shell.accessibility-mode .login-link,
+.auth-shell.accessibility-mode .signup-link button,
+.auth-shell.accessibility-mode .login-account-btn {
+  font-size: 1.05rem;
+}
+
+.auth-shell.accessibility-mode .login-title,
+.auth-shell.accessibility-mode .cadastro-title {
+  font-size: 2.2rem;
+}
+
+.auth-shell.accessibility-mode .login-form .input-group input,
+.auth-shell.accessibility-mode .cadastro-form .input-group input {
+  min-height: 62px;
+  height: auto;
+  font-size: 1.1rem;
+}
+
+.auth-shell.accessibility-mode .login-btn,
+.auth-shell.accessibility-mode .cadastro-btn {
+  min-height: 62px;
+  height: auto;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 640px) {
+  .accessibility-header {
+    top: 10px;
+    left: 10px;
+  }
+
+  .auth-shell .login-container,
+  .auth-shell .cadastro-container {
+    padding-top: 76px;
+  }
+}

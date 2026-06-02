@@ -80,22 +80,13 @@ function Cadastro({ onGoToLogin }) {
   return (
     <div className="cadastro-container">
       <div className="cadastro-card">
-        <div className="hospital-icon">
-          <svg width="80" height="80" viewBox="0 0 100 100" fill="none">
-            <rect x="20" y="30" width="60" height="50" rx="3" fill="#3b82f6" opacity="0.9"/>
-            <rect x="25" y="25" width="50" height="40" rx="2" fill="#60a5fa" opacity="0.7"/>
-            <path d="M45 35 L55 35 M50 30 L50 40" stroke="white" strokeWidth="3" strokeLinecap="round"/>
-            <rect x="30" y="65" width="8" height="15" fill="#1e40af"/>
-            <rect x="62" y="65" width="8" height="15" fill="#1e40af"/>
-            <rect x="35" y="45" width="6" height="4" fill="white" opacity="0.8"/>
-            <rect x="59" y="45" width="6" height="4" fill="white" opacity="0.8"/>
-            <rect x="35" y="52" width="6" height="4" fill="white" opacity="0.8"/>
-            <rect x="59" y="52" width="6" height="4" fill="white" opacity="0.8"/>
-            <path d="M20 30 L50 15 L80 30" stroke="#1e40af" strokeWidth="2" fill="none"/>
-          </svg>
+        <div className="auth-brand">
+          <span className="auth-logo">+</span>
+          <div>
+            <h1 className="cadastro-title">PharmaLife</h1>
+            <p>Criar conta</p>
+          </div>
         </div>
-        
-        <h1 className="cadastro-title">Criar Conta</h1>
         
         <form onSubmit={handleSubmit} className="cadastro-form">
           <div className="input-group">

@@ -50,7 +50,7 @@ function App() {
 
   if (currentPage === 'login') {
     return (
-      <div className={accessibilityMode ? 'accessibility-mode' : ''}>
+      <div className={`auth-shell ${accessibilityMode ? 'accessibility-mode' : ''}`.trim()}>
         <div className="accessibility-header">
           <button 
             className="accessibility-toggle-login"
@@ -67,7 +67,7 @@ function App() {
   }
 
   return (
-    <div className={accessibilityMode ? 'accessibility-mode' : ''}>
+    <div className={`auth-shell ${accessibilityMode ? 'accessibility-mode' : ''}`.trim()}>
       <div className="accessibility-header">
         <button 
           className="accessibility-toggle-login"
